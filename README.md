@@ -1,45 +1,52 @@
-# QuizBattle — Frontend (Next.js)
+# QuizBattle — Frontend
 
-Interface web pour **QuizBattle**, une app de quiz de culture générale entre potes en mode asynchrone.
+Interface web développée en Next.js pour QuizBattle, une application de quiz de culture générale à jouer entre amis. Ce dépôt contient uniquement le frontend. Le backend associé (API Laravel) se trouve dans le dépôt quizbattle-backend.
 
-## Stack
+## Stack technique
 
-- Next.js 14 (App Router)
-- TypeScript
-- Tailwind CSS
+- Framework : Next.js 14 (App Router)
+- Langage : TypeScript
+- Style : Tailwind CSS
+- Hébergement : Vercel
 
-## Installation
+## Architecture
 
-```bash
-npm install
-cp .env.local.example .env.local
-```
+L'application est un client léger consommant l'API REST du backend Laravel via un module client centralisé (src/lib/api.ts), qui gère l'ajout du token d'authentification et la normalisation des erreurs pour l'ensemble des appels.
 
-Renseigne l'URL de ton API Laravel dans `.env.local` (`NEXT_PUBLIC_API_URL`), puis :
+Organisation des pages (App Router) :
+- / : accueil, avec détection de l'état de connexion
+- /register, /login : authentification
+- /create : création d'une session de quiz (choix de catégorie et nombre de questions)
+- /join : rejoindre une session via son code
+- /session/[code]/play : déroulement du quiz, question par question, avec retour immédiat sur chaque réponse
+- /session/[code]/leaderboard : classement d'une session
+- /leaderboard : classement global cumulé
 
-```bash
-npm run dev
-```
+L'authentification repose sur un token Bearer stocké côté client (localStorage), transmis à chaque requête vers l'API.
 
-L'app est disponible sur `http://localhost:3000`.
+## Démarche de développement
 
-## Pages
+Le développement a été mené entièrement depuis un terminal Android (Termux), en l'absence de poste de travail traditionnel. Cette contrainte a mis en évidence une limitation technique de fond : le compilateur natif utilisé par Next.js (SWC) n'est pas distribué pour l'architecture Android, rendant impossible toute compilation locale sur ce type d'environnement.
 
-| Route | Description |
-|---|---|
-| `/` | Accueil — créer ou rejoindre un quiz |
-| `/register`, `/login` | Authentification |
-| `/create` | Créer une session (choix catégorie + nombre de questions) → génère un code |
-| `/join` | Rejoindre une session via un code |
-| `/session/[code]/play` | Jouer — répondre aux questions à son rythme, feedback immédiat |
-| `/session/[code]/leaderboard` | Classement de la session |
-| `/leaderboard` | Classement global cumulé (tous quiz confondus) |
+Le contournement retenu a été de déléguer la compilation à Vercel, qui construit le projet sur ses propres serveurs à chaque push sur la branche principale. Cette approche a également permis de valider le projet sans dépendre des ressources matérielles du terminal de développement.
 
-## Fonctionnement
+## Installation locale
 
-Le jeu est **asynchrone** : chaque joueur rejoint une session avec le code, répond aux questions à son propre rythme (le temps de réponse influence les points), puis termine sa partie. Le classement de session s'actualise pour tout le monde au fur et à mesure que les joueurs terminent.
+Prérequis : Node.js, npm.
 
-## Notes
+    npm install
+    cp .env.local.example .env.local
 
-- Le token d'authentification est stocké en `localStorage` (`quizbattle_token`).
-- Le style visuel (dégradé violet, cartes translucides) est centralisé dans `globals.css` et `tailwind.config.ts` — facile à changer.
+Renseigner l'URL de l'API dans .env.local (NEXT_PUBLIC_API_URL), puis :
+
+    npm run dev
+
+L'application est disponible sur http://localhost:3000.
+
+Remarque : la compilation Next.js nécessite une architecture prise en charge par son compilateur natif (SWC). Elle ne peut pas s'exécuter sur un environnement Android tel que Termux.
+
+## Déploiement
+
+Le déploiement est assuré par Vercel, connecté au dépôt GitHub. Chaque push sur la branche principale déclenche automatiquement un nouveau build et déploiement.
+
+Variable d'environnement requise : NEXT_PUBLIC_API_URL, pointant vers l'URL de l'API backend déployée.
